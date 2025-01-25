@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "342116384527",
+    "project_id": "ss-santa",
+    "storage_bucket": "ss-santa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:342116384527:android:a04658169b0cbe28c1487a",
+        "android_client_info": {
+          "package_name": "com.khatavahirojmelapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQM1vz9X70zK52nNpzyMC06EaTt2a0knM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
