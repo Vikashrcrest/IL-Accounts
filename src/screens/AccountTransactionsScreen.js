@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  Linking,
 } from 'react-native';
 import {colors, globalStyles} from '../styles/theme';
 import TransactionItem from '../components/TransactionItem';
@@ -16,8 +15,8 @@ import {
   fetchEntriesByAccountId,
 } from '../services/database';
 import {useFocusEffect} from '@react-navigation/native';
+// import Share from 'react-native-share'; // Commented out for now
 import PDFGenerator from '../utils/pdfGenerator';
-import Share from 'react-native-share';
 
 const AccountTransactionsScreen = ({route, navigation}) => {
   const {accountId, accountName} = route.params;
@@ -88,12 +87,20 @@ const AccountTransactionsScreen = ({route, navigation}) => {
         accountTransactions,
       );
       if (filePath) {
+        // Share implementation commented out
+        /*
         await Share.open({
           url: `file://${filePath}`,
           title: 'Share Report',
           message: 'Here is the report you requested.',
           failOnCancel: false, // Prevent errors when the user cancels sharing
         });
+        */
+        Alert.alert(
+          'Feature Pending',
+          'The Share functionality is not implemented yet. The PDF is generated at: ' +
+            filePath,
+        );
       }
     } catch (error) {
       console.error('Error sharing account report:', error);
@@ -116,8 +123,7 @@ const AccountTransactionsScreen = ({route, navigation}) => {
       {/* Action Buttons */}
       <View style={styles.actionsContainer}>
         <TouchableOpacity
-          // onPress={handleEditAccount}
-          onPress={() => {}}
+          onPress={handleEditAccount}
           style={[styles.actionButton, {backgroundColor: colors.lightText}]}>
           <Text style={styles.actionButtonText}>Edit Account</Text>
         </TouchableOpacity>

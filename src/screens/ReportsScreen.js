@@ -125,13 +125,13 @@ const ReportsScreen = () => {
     }
   };
 
-  const handleDownloadKhataPDF = async () => {
+  const handleDownloadPDF = async (type, generatorFn) => {
     setModalVisible(false);
     try {
-      const filePath = await PDFGenerator.generateKhataPDF(accounts, entries);
+      const filePath = await generatorFn();
       if (filePath) {
         Alert.alert(
-          'Report Generated',
+          `${type} Report Generated`,
           'Do you want to open or share the report?',
           [
             {
@@ -147,66 +147,8 @@ const ReportsScreen = () => {
         );
       }
     } catch (error) {
-      console.error('Error downloading Khata PDF:', error);
-      Alert.alert('Error', 'Failed to generate or share the Khata PDF.');
-    }
-  };
-
-  const handleDownloadRojmelPDF = async () => {
-    setModalVisible(false);
-    try {
-      const filePath = await PDFGenerator.generateRojmelPDF(entries);
-      if (filePath) {
-        Alert.alert(
-          'Report Generated',
-          'Do you want to open or share the report?',
-          [
-            {
-              text: 'Open',
-              onPress: () => Linking.openURL(`file://${filePath}`),
-            },
-            {
-              text: 'Share',
-              onPress: () => handleSharePDF(filePath),
-            },
-            {text: 'Cancel', style: 'cancel'},
-          ],
-        );
-      }
-    } catch (error) {
-      console.error('Error downloading Rojmel PDF:', error);
-      Alert.alert('Error', 'Failed to generate or share the Rojmel PDF.');
-    }
-  };
-
-  const handleDownloadTotalsPDF = async () => {
-    setModalVisible(false);
-    try {
-      const filePath = await PDFGenerator.generateTotalsPDF(
-        accounts,
-        entries,
-        totals,
-      );
-      if (filePath) {
-        Alert.alert(
-          'Report Generated',
-          'Do you want to open or share the report?',
-          [
-            {
-              text: 'Open',
-              onPress: () => Linking.openURL(`file://${filePath}`),
-            },
-            {
-              text: 'Share',
-              onPress: () => handleSharePDF(filePath),
-            },
-            {text: 'Cancel', style: 'cancel'},
-          ],
-        );
-      }
-    } catch (error) {
-      console.error('Error downloading Totals PDF:', error);
-      Alert.alert('Error', 'Failed to generate or share the Totals PDF.');
+      console.error(`Error downloading ${type} PDF:`, error);
+      Alert.alert('Error', `Failed to generate or share the ${type} PDF.`);
     }
   };
 
@@ -285,17 +227,29 @@ const ReportsScreen = () => {
             <Text style={styles.modalTitle}>Download Options</Text>
             <TouchableOpacity
               style={styles.modalButton}
-              onPress={handleDownloadKhataPDF}>
+              onPress={() =>
+                handleDownloadPDF('Khata', () =>
+                  PDFGenerator.generateKhataPDF(accounts, entries),
+                )
+              }>
               <Text style={styles.modalButtonText}>Download Khata</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.modalButton}
-              onPress={handleDownloadRojmelPDF}>
+              onPress={() =>
+                handleDownloadPDF('Rojmel', () =>
+                  PDFGenerator.generateRojmelPDF(entries),
+                )
+              }>
               <Text style={styles.modalButtonText}>Download Rojmel</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.modalButton}
-              onPress={handleDownloadTotalsPDF}>
+              onPress={() =>
+                handleDownloadPDF('Totals', () =>
+                  PDFGenerator.generateTotalsPDF(accounts, entries, totals),
+                )
+              }>
               <Text style={styles.modalButtonText}>Download Totals</Text>
             </TouchableOpacity>
             <TouchableOpacity
