@@ -203,6 +203,7 @@ const ReportsScreen = () => {
 
       <TouchableOpacity
         style={styles.downloadButton}
+        disabled={true}
         onPress={() => setModalVisible(true)}>
         <Text style={styles.downloadButtonText}>Download Reports</Text>
       </TouchableOpacity>
