@@ -1,7 +1,15 @@
 import React, {useRef, useState, useEffect} from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, Alert} from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  Platform,
+} from 'react-native';
 import {Formik} from 'formik';
 import * as Yup from 'yup';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import {colors, globalStyles} from '../styles/theme';
 import Entry from '../models/EntryModel';
 import CustomInput from '../components/CustomInput';
@@ -13,6 +21,11 @@ import {auth} from '../firebaseConfig';
 const AddTransactionScreen = ({navigation, route}) => {
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split('T')[0],
+  );
+
   const accountIdFromParams = route.params?.accountId;
 
   const db = getFirestore();
@@ -26,7 +39,6 @@ const AddTransactionScreen = ({navigation, route}) => {
         const snapshot = await getDocs(accountsRef);
         const accountsData = snapshot.docs.map(doc => ({
           id: doc.id,
-
           ...doc.data(),
         }));
         setAccounts(accountsData);
@@ -42,14 +54,15 @@ const AddTransactionScreen = ({navigation, route}) => {
   }, [db, userId]);
 
   // Refs for input navigation
-  const dateRef = useRef();
   const amountRef = useRef();
   const descriptionRef = useRef();
 
   // Validation schema
   const entrySchema = Yup.object().shape({
     accountId: Yup.string().required('Account is required'),
-    transactionDate: Yup.date().required('Date is required'),
+    transactionDate: Yup.date()
+      .required('Date is required')
+      .max(new Date(), 'Transaction date cannot be in the future'),
     type: Yup.string().required('Transaction type is required'),
     amount: Yup.number()
       .required('Amount is required')
@@ -69,7 +82,7 @@ const AddTransactionScreen = ({navigation, route}) => {
     const amount = parseFloat(values.amount);
 
     const newEntry = new Entry(
-      Date.now().toString(), // Unique ID for the entry
+      Date.now().toString(),
       values.accountId,
       values.transactionDate,
       values.type,
@@ -78,12 +91,20 @@ const AddTransactionScreen = ({navigation, route}) => {
     );
 
     try {
-      await addNewEntry(newEntry); // Save to Firebase
+      await addNewEntry(newEntry);
       Alert.alert('Success', 'Transaction added successfully.');
-      navigation.goBack(); // Navigate back after success
+      navigation.goBack();
     } catch (error) {
       console.error('Error adding transaction:', error);
       Alert.alert('Error', 'Failed to add transaction. Please try again.');
+    }
+  };
+
+  const handleDateChange = (event, selected) => {
+    setShowDatePicker(false);
+    if (selected) {
+      const formattedDate = selected.toISOString().split('T')[0];
+      setSelectedDate(formattedDate);
     }
   };
 
@@ -99,7 +120,7 @@ const AddTransactionScreen = ({navigation, route}) => {
     <Formik
       initialValues={{
         accountId: accountIdFromParams || '',
-        transactionDate: new Date().toISOString().split('T')[0],
+        transactionDate: selectedDate,
         type: 'credit',
         amount: '',
         description: '',
@@ -116,8 +137,6 @@ const AddTransactionScreen = ({navigation, route}) => {
         touched,
       }) => (
         <View style={globalStyles.container}>
-          {/* Account Selection */}
-          {/* <Text style={styles.label}>Account</Text> */}
           {accountIdFromParams ? (
             <CustomInput
               label="Account"
@@ -128,7 +147,7 @@ const AddTransactionScreen = ({navigation, route}) => {
             />
           ) : (
             <CustomDropdown
-              data={accounts} // List of account names
+              data={accounts}
               onSelect={accountId => setFieldValue('accountId', accountId)}
               selectedValue={values.accountId}
               placeholder="Select Account"
@@ -139,19 +158,22 @@ const AddTransactionScreen = ({navigation, route}) => {
           )}
 
           {/* Transaction Date */}
-          <CustomInput
-            label="Transaction Date"
-            icon="calendar-today"
-            placeholder="YYYY-MM-DD"
-            onChangeText={handleChange('transactionDate')}
-            onBlur={handleBlur('transactionDate')}
-            value={values.transactionDate}
-            error={errors.transactionDate}
-            touched={touched.transactionDate}
-            ref={dateRef}
-            returnKeyType="next"
-            onSubmitEditing={() => amountRef.current.focus()}
-          />
+          <TouchableOpacity
+            onPress={() => setShowDatePicker(true)}
+            style={styles.datePicker}>
+            <Text style={styles.dateText}>{values.transactionDate}</Text>
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={new Date(values.transactionDate)}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              maximumDate={new Date()} // Prevent future dates
+              onChange={(event, selectedDate) =>
+                handleDateChange(event, selectedDate || new Date())
+              }
+            />
+          )}
 
           {/* Transaction Type */}
           <Text style={styles.label}>Transaction Type</Text>
@@ -277,6 +299,17 @@ const styles = StyleSheet.create({
   },
   inactiveText: {
     color: colors.primary,
+  },
+  datePicker: {
+    padding: 12,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  dateText: {
+    color: colors.text,
+    fontSize: 16,
   },
 });
 
