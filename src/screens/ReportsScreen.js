@@ -10,7 +10,7 @@ import {
   Alert,
   Linking,
 } from 'react-native';
-import Share from 'react-native-share';
+// import Share from 'react-native-share'; // Commented out the Share import
 import {getFirestore, collection, getDocs} from 'firebase/firestore';
 import {useFocusEffect} from '@react-navigation/native';
 import {colors, fontSizes, globalStyles} from '../styles/theme';
@@ -26,7 +26,6 @@ const ReportsScreen = () => {
 
   const db = getFirestore();
 
-  // Fetch accounts and entries from Firebase
   const fetchReportsData = async () => {
     setLoading(true);
     try {
@@ -35,7 +34,6 @@ const ReportsScreen = () => {
         throw new Error('User not authenticated.');
       }
 
-      // Fetch accounts
       const accountsRef = collection(db, `users/${userId}/accounts`);
       const accountsSnapshot = await getDocs(accountsRef);
       const accountsData = accountsSnapshot.docs.map(doc => ({
@@ -43,7 +41,6 @@ const ReportsScreen = () => {
         ...doc.data(),
       }));
 
-      // Fetch entries
       const entriesRef = collection(db, `users/${userId}/entries`);
       const entriesSnapshot = await getDocs(entriesRef);
       const entriesData = entriesSnapshot.docs.map(doc => ({
@@ -51,7 +48,6 @@ const ReportsScreen = () => {
         ...doc.data(),
       }));
 
-      // Calculate balances dynamically based on entries
       const updatedAccounts = accountsData.map(account => {
         const relatedEntries = entriesData.filter(
           entry => entry.accountId === account.id,
@@ -86,14 +82,12 @@ const ReportsScreen = () => {
     }
   };
 
-  // Fetch data on screen focus
   useFocusEffect(
     useCallback(() => {
       fetchReportsData();
     }, []),
   );
 
-  // Calculate reports data
   const totalParties = safeValue(accounts.length);
   const totalBalance = accounts.reduce(
     (sum, account) => sum + safeValue(account.balance),
@@ -111,19 +105,19 @@ const ReportsScreen = () => {
 
   const totals = {totalParties, totalBalance, totalCredit, totalDebit};
 
-  const handleSharePDF = async filePath => {
-    try {
-      await Share.open({
-        url: `file://${filePath}`,
-        title: 'Share Report',
-        message: 'Here is the report you requested.',
-        failOnCancel: false, // Prevent errors when the user cancels sharing
-      });
-    } catch (error) {
-      console.error('Error sharing PDF:', error);
-      Alert.alert('Error', 'Failed to share the PDF.');
-    }
-  };
+  // const handleSharePDF = async filePath => {
+  //   try {
+  //     await Share.open({
+  //       url: `file://${filePath}`,
+  //       title: 'Share Report',
+  //       message: 'Here is the report you requested.',
+  //       failOnCancel: false,
+  //     });
+  //   } catch (error) {
+  //     console.error('Error sharing PDF:', error);
+  //     Alert.alert('Error', 'Failed to share the PDF.');
+  //   }
+  // };
 
   const handleDownloadPDF = async (type, generatorFn) => {
     setModalVisible(false);
@@ -132,16 +126,16 @@ const ReportsScreen = () => {
       if (filePath) {
         Alert.alert(
           `${type} Report Generated`,
-          'Do you want to open or share the report?',
+          'Do you want to open the report? The share feature is in development.',
           [
             {
               text: 'Open',
               onPress: () => Linking.openURL(`file://${filePath}`),
             },
-            {
-              text: 'Share',
-              onPress: () => handleSharePDF(filePath),
-            },
+            // {
+            //   text: 'Share',
+            //   onPress: () => handleSharePDF(filePath),
+            // },
             {text: 'Cancel', style: 'cancel'},
           ],
         );
@@ -162,7 +156,6 @@ const ReportsScreen = () => {
 
   return (
     <View style={[globalStyles.container, styles.container]}>
-      {/* Summary Grid */}
       <View style={styles.gridContainer}>
         <View style={styles.gridItem}>
           <Text style={styles.gridTitle}>Total Parties</Text>
@@ -194,7 +187,6 @@ const ReportsScreen = () => {
         </View>
       </View>
 
-      {/* Top Due Accounts */}
       <Text style={styles.sectionTitle}>Top 3 Parties with Max Due Amount</Text>
       <FlatList
         data={topDueAccounts}
@@ -209,14 +201,12 @@ const ReportsScreen = () => {
         )}
       />
 
-      {/* Download Button */}
       <TouchableOpacity
         style={styles.downloadButton}
         onPress={() => setModalVisible(true)}>
         <Text style={styles.downloadButtonText}>Download Reports</Text>
       </TouchableOpacity>
 
-      {/* Modal for Download Options */}
       <Modal
         animationType="slide"
         transparent={true}
